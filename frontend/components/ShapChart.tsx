@@ -51,9 +51,9 @@ export default function ShapChart({ shapValues }: Props) {
           <Tooltip content={<CustomTooltip />} />
           <ReferenceLine x={0} stroke="#94a3b8" />
           <Bar dataKey="shap" radius={2}>
-            {data.map((entry, index) => (
+            {data.map((entry) => (
               <Cell
-                key={index}
+                key={entry.feature}
                 fill={entry.shap > 0 ? '#ef4444' : '#3b82f6'}
               />
             ))}
