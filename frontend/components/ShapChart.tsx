@@ -6,7 +6,12 @@ interface Props {
   shapValues: ShapValue[]
 }
 
-const CustomTooltip = ({ active, payload }: any) => {
+interface TooltipProps {
+  active?: boolean
+  payload?: Array<{ payload: ShapValue }>
+}
+
+const CustomTooltip = ({ active, payload }: TooltipProps) => {
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   return (
