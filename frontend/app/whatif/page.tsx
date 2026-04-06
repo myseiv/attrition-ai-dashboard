@@ -18,10 +18,36 @@ const DEFAULTS = {
   StockOptionLevel: 1,
 }
 
+interface SliderProps {
+  label: string
+  name: string
+  value: number
+  min: number
+  max: number
+  step?: number
+  onChange: (val: number) => void
+}
+
+const Slider = ({ label, value, min, max, step = 1, onChange }: SliderProps) => (
+  <label className="block">
+    <div className="flex justify-between items-center mb-1">
+      <span className="text-xs font-medium text-slate-600 uppercase tracking-wide">{label}</span>
+      <span className="text-sm font-semibold text-slate-800">{value}</span>
+    </div>
+    <input
+      type="range" min={min} max={max} step={step}
+      value={value}
+      onChange={e => onChange(Number(e.target.value))}
+      className="w-full accent-slate-700"
+    />
+  </label>
+)
+
 export default function WhatIfPage() {
   const [form, setForm] = useState<Record<string, string | number>>(DEFAULTS)
   const [result, setResult] = useState<PredictResponse | null>(null)
   const [loading, setLoading] = useState(false)
+  const [apiError, setApiError] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -31,8 +57,9 @@ export default function WhatIfPage() {
       try {
         const res = await predict(form)
         setResult(res)
-      } catch {
-        // silently ignore during live updates
+        setApiError(null)
+      } catch (err) {
+        setApiError(err instanceof Error ? err.message : 'Backend unavailable')
       } finally {
         setLoading(false)
       }
@@ -41,29 +68,6 @@ export default function WhatIfPage() {
   }, [form])
 
   const set = (key: string, val: string | number) => setForm((f) => ({ ...f, [key]: val }))
-
-  interface SliderProps {
-    label: string
-    name: string
-    min: number
-    max: number
-    step?: number
-  }
-
-  const Slider = ({ label, name, min, max, step = 1 }: SliderProps) => (
-    <label className="block">
-      <div className="flex justify-between items-center mb-1">
-        <span className="text-xs font-medium text-slate-600 uppercase tracking-wide">{label}</span>
-        <span className="text-sm font-semibold text-slate-800">{form[name]}</span>
-      </div>
-      <input
-        type="range" min={min} max={max} step={step}
-        value={form[name] as number}
-        onChange={e => set(name, Number(e.target.value))}
-        className="w-full accent-slate-700"
-      />
-    </label>
-  )
 
   return (
     <div>
@@ -79,15 +83,15 @@ export default function WhatIfPage() {
               <option>Yes</option><option>No</option>
             </select>
           </label>
-          <Slider label="Age" name="Age" min={18} max={60} />
-          <Slider label="Monthly Income ($)" name="MonthlyIncome" min={1000} max={20000} step={100} />
+          <Slider label="Age" name="Age" value={form.Age as number} min={18} max={60} onChange={v => set('Age', v)} />
+          <Slider label="Monthly Income ($)" name="MonthlyIncome" value={form.MonthlyIncome as number} min={1000} max={20000} step={100} onChange={v => set('MonthlyIncome', v)} />
           <label className="block">
             <span className="text-xs font-medium text-slate-600 uppercase tracking-wide">Job Satisfaction</span>
             <select className="mt-1 w-full border rounded-md px-3 py-2 text-sm" value={form.JobSatisfaction as number} onChange={e => set('JobSatisfaction', Number(e.target.value))}>
               <option value={1}>1 – Low</option><option value={2}>2 – Medium</option><option value={3}>3 – High</option><option value={4}>4 – Very High</option>
             </select>
           </label>
-          <Slider label="Years at Company" name="YearsAtCompany" min={0} max={40} />
+          <Slider label="Years at Company" name="YearsAtCompany" value={form.YearsAtCompany as number} min={0} max={40} onChange={v => set('YearsAtCompany', v)} />
           <label className="block">
             <span className="text-xs font-medium text-slate-600 uppercase tracking-wide">Work-Life Balance</span>
             <select className="mt-1 w-full border rounded-md px-3 py-2 text-sm" value={form.WorkLifeBalance as number} onChange={e => set('WorkLifeBalance', Number(e.target.value))}>
@@ -100,8 +104,8 @@ export default function WhatIfPage() {
               {[1,2,3,4,5].map(v => <option key={v} value={v}>{v}</option>)}
             </select>
           </label>
-          <Slider label="Distance from Home (km)" name="DistanceFromHome" min={1} max={30} />
-          <Slider label="Companies Worked At" name="NumCompaniesWorked" min={0} max={9} />
+          <Slider label="Distance from Home (km)" name="DistanceFromHome" value={form.DistanceFromHome as number} min={1} max={30} onChange={v => set('DistanceFromHome', v)} />
+          <Slider label="Companies Worked At" name="NumCompaniesWorked" value={form.NumCompaniesWorked as number} min={0} max={9} onChange={v => set('NumCompaniesWorked', v)} />
           <label className="block">
             <span className="text-xs font-medium text-slate-600 uppercase tracking-wide">Stock Option Level</span>
             <select className="mt-1 w-full border rounded-md px-3 py-2 text-sm" value={form.StockOptionLevel as number} onChange={e => set('StockOptionLevel', Number(e.target.value))}>
@@ -112,6 +116,9 @@ export default function WhatIfPage() {
 
         {/* Right: Live result */}
         <div className="space-y-4">
+          {apiError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{apiError}</div>
+          )}
           {loading && !result && (
             <div className="bg-white rounded-lg border p-8 text-center text-slate-400 text-sm">Loading...</div>
           )}
