@@ -136,7 +136,7 @@ def predict(req: PredictRequest):
 
 
 @app.get("/global-importance")
-def global_importance():
+def global_importance():  # noqa: C901
     global claude_summary_cache
 
     features = [{"feature": k, "importance": v} for k, v in global_shap_data.items()]
