@@ -43,7 +43,10 @@ export default function GlobalPage() {
             <XAxis type="number" tick={{ fontSize: 11 }} />
             <YAxis type="category" dataKey="feature" tick={{ fontSize: 12 }} width={150} />
             <Tooltip
-              formatter={(val: number) => [val.toFixed(4), 'Mean |SHAP|']}
+              formatter={(val) => {
+                const num = typeof val === 'number' ? val : parseFloat(String(val))
+                return [isNaN(num) ? String(val) : num.toFixed(4), 'Mean |SHAP|'] as [string, string]
+              }}
               contentStyle={{ fontSize: 12 }}
             />
             <Bar dataKey="importance" radius={2}>
