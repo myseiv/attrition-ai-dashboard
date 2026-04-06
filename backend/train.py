@@ -26,6 +26,9 @@ def _get_class1_shap(raw):
 def train():
     os.makedirs(MODEL_DIR, exist_ok=True)
 
+    if not os.path.exists(DATA_PATH):
+        raise FileNotFoundError(f"Dataset not found at {DATA_PATH}")
+
     df = pd.read_csv(DATA_PATH)
     df = df.drop(columns=COLS_TO_DROP)
     df["Attrition"] = (df["Attrition"] == "Yes").astype(int)
