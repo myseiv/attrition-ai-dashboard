@@ -37,6 +37,13 @@ FALLBACK_SUMMARY = (
 )
 
 
+def _req_dict(req: BaseModel) -> dict:
+    """Return pydantic model as dict — compatible with both v1 and v2."""
+    if hasattr(req, "model_dump"):
+        return req.model_dump()
+    return req.dict()
+
+
 def _get_class1_shap(raw):
     if isinstance(raw, list):
         return raw[1]
@@ -87,7 +94,7 @@ class PredictRequest(BaseModel):
 def predict(req: PredictRequest):
     # Start from defaults, overlay user inputs
     row = dict(feature_defaults)
-    for key, val in req.dict().items():
+    for key, val in _req_dict(req).items():
         row[key] = val
 
     # Encode categoricals
@@ -113,7 +120,7 @@ def predict(req: PredictRequest):
         raw_shap = raw_shap.values
     local_shap = _get_class1_shap(raw_shap)[0]
 
-    user_vals = req.dict()
+    user_vals = _req_dict(req)
     shap_list = [
         {
             "feature": feature_names[i],
