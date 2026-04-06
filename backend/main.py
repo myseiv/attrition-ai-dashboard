@@ -177,7 +177,11 @@ def model_metrics():
 
 @app.post("/train")
 def retrain():
+    if not os.environ.get("ALLOW_RETRAIN"):
+        raise HTTPException(status_code=403, detail="Set ALLOW_RETRAIN=1 to enable retraining")
+    global claude_summary_cache
     from train import train
     new_metrics = train()
     load_artifacts()
+    claude_summary_cache = None
     return new_metrics
